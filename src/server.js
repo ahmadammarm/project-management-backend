@@ -2,6 +2,8 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import {clerkMiddleware} from '@clerk/express';
+import {serve} from 'inngest/express';
+import {inngest, functions} from './lib/inngest.js';
 
 dotenv.config();
 
@@ -18,6 +20,8 @@ app.use(clerkMiddleware());
 app.get('/', (_, res) => {
   res.send('Project Management Backend is running');
 });
+
+app.use('/api/inngest', serve({client: inngest, functions}));
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
