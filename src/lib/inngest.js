@@ -35,4 +35,22 @@ const syncUserDeletieion = inngest.createFunction(
   },
 );
 
-export const functions = [syncUserCreation, syncUserDeletieion];
+const syncUserUpdate = inngest.createFunction(
+  {id: 'sync-user-update-from-clerk'},
+  {event: 'clerk/user.updated'},
+  async ({event}) => {
+    const {data} = event;
+    await prisma.user.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        email: data?.email_addresses[0]?.email_address,
+        name: data?.first_name + ' ' + data?.last_name,
+        image: data?._image_url,
+      },
+    });
+  },
+);
+
+export const functions = [syncUserCreation, syncUserDeletieion, syncUserUpdate];
