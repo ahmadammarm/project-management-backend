@@ -1,11 +1,7 @@
-import {Inngest} from 'inngest';
+import {inngest} from './client';
 import prisma from './prisma';
 
-export const inngest = new Inngest({
-  id: 'project-management-backend',
-  name: 'Project Management Backend',
-});
-
+// user management functions
 const syncUserCreation = inngest.createFunction(
   {id: 'sync-user-from-clerk'},
   {event: 'clerk/user.created'},
@@ -22,7 +18,7 @@ const syncUserCreation = inngest.createFunction(
   },
 );
 
-const syncUserDeletieion = inngest.createFunction(
+const syncUserDeletion = inngest.createFunction(
   {id: 'sync-user-deletion-from-clerk'},
   {event: 'clerk/user.deleted'},
   async ({event}) => {
@@ -53,4 +49,36 @@ const syncUserUpdate = inngest.createFunction(
   },
 );
 
-export const functions = [syncUserCreation, syncUserDeletieion, syncUserUpdate];
+// workspace management functions
+const syncWorkspaceCreation = inngest.createFunction(
+  {id: 'sync-workspace-from-clerk'},
+  {event: 'clerk/organization.created'},
+  async ({event}) => {
+    const {data} = event;
+    await prisma.workspace.create({
+      data: {
+        id: data.id,
+        name: data.name,
+        slug: data.slug,
+        ownerId: data.created_by,
+        image_url: data.image_url,
+      },
+    });
+
+    // add the creator as an admin member
+    await prisma.workspaceMember.create({
+      data: {
+        userId: data.created_by,
+        workspaceId: data.id,
+        role: 'ADMIN',
+      },
+    });
+  },
+);
+
+export const functions = [
+  syncUserCreation,
+  syncUserDeletion,
+  syncUserUpdate,
+  syncWorkspaceCreation,
+];
