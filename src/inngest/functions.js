@@ -76,9 +76,42 @@ const syncWorkspaceCreation = inngest.createFunction(
   },
 );
 
+const syncWorkspaceUpdate = inngest.createFunction(
+  {id: 'sync-workspace-update-from-clerk'},
+  {event: 'clerk/organization.updated'},
+  async ({event}) => {
+    const {data} = event;
+    await prisma.workspace.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        name: data.name,
+        slug: data.slug,
+        image_url: data.image_url,
+      },
+    });
+  },
+);
+
+const syncWorkspaceDeletion = inngest.createFunction(
+  {id: 'sync-workspace-deletion-from-clerk'},
+  {event: 'clerk/organization.deleted'},
+  async ({event}) => {
+    const {data} = event;
+    await prisma.workspace.delete({
+      where: {
+        id: data.id,
+      },
+    });
+  },
+);
+
 export const functions = [
   syncUserCreation,
   syncUserDeletion,
   syncUserUpdate,
   syncWorkspaceCreation,
+  syncWorkspaceUpdate,
+  syncWorkspaceDeletion,
 ];
