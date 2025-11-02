@@ -1,5 +1,5 @@
-import {inngest} from './client';
-import prisma from './prisma';
+import {inngest} from './client.js';
+import prisma from '../lib/prisma.js';
 
 // user management functions
 const syncUserCreation = inngest.createFunction(
