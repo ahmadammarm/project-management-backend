@@ -5,6 +5,7 @@ import {clerkMiddleware} from '@clerk/express';
 import {serve} from 'inngest/express';
 import {inngest} from './inngest/client.js';
 import {functions} from './inngest/functions.js';
+import workspaceRouter from './routes/WorkspaceRoutes.js';
 
 dotenv.config();
 
@@ -23,6 +24,9 @@ app.get('/', (_, res) => {
 });
 
 app.use('/api/inngest', serve({client: inngest, functions}));
+
+// workspace routes
+app.use('/api/workspaces', workspaceRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
