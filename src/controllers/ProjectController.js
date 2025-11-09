@@ -87,7 +87,7 @@ export const UpdateProject = async (request, response) => {
 
     try {
         const { userId } = await request.auth();
-        const { workspaceId, name, description, status, start_date, end_date,
+        const { id, workspaceId, name, description, status, start_date, end_date,
              progress, priority
         } = request.body;
 
