@@ -87,8 +87,8 @@ export const UpdateProject = async (request, response) => {
 
     try {
         const { userId } = await request.auth();
-        const { workspaceId, name, description, status, start_date, end_date, team_members, 
-            team_lead, progress, priority
+        const { workspaceId, name, description, status, start_date, end_date,
+             progress, priority
         } = request.body;
 
         const workspace = await prisma.workspace.findUnique({
