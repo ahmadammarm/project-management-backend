@@ -17,7 +17,7 @@ export const CreateProject = async (request, response) => {
         }
 
         if(!workspace.members.some((member) => member.userId === userId && member.role === 'ADMIN')) {
-            return response.status(403).send({ message: 'Forbidden: You do not have permission to create a project in this workspace' });
+            return response.status(403).send( { message: 'Forbidden: You do not have permission to create a project in this workspace' });
         }
 
         const teamLead = await prisma.user.findUnique({
@@ -84,8 +84,51 @@ export const CreateProject = async (request, response) => {
 }
 
 export const UpdateProject = async (request, response) => {
+
     try {
-        
+        const { userId } = await request.auth();
+        const { workspaceId, name, description, status, start_date, end_date, team_members, 
+            team_lead, progress, priority
+        } = request.body;
+
+        const workspace = await prisma.workspace.findUnique({
+            where: { id: workspaceId },
+            include: { members: { include: { user: true } } }
+        });
+
+        if(!workspace) {
+            return response.status(404).send({ message: 'Workspace not found' });
+        }
+
+        if(!workspace.members.some((member) => member.userId === userId && member.role === 'ADMIN')) {
+            
+            const project = await prisma.project.findUnique({
+                where: { id }
+            });
+
+            if(!project) {
+                return response.status(404).send({ message: 'Project not found' });
+            } else if(project.team_lead !== userId) {
+                return response.status(403).send( { message: 'Forbidden: You do not have permission to update this project' });
+            }
+        }
+
+        const project = await prisma.project.update({
+            where: { id },
+            data: {
+                workspaceId,
+                name,
+                description,
+                status,
+                priority,
+                progress,
+                start_date: start_date ? new Date(start_date) : null,
+                end_date: end_date ? new Date(end_date) : null,
+            }
+        });
+
+        return response.status(200).json({ project, message: 'Project updated successfully' });
+
     } catch(error) {
         console.log(error || "Error to update a product")
         return response.status(500).send({ message: 'Internal Server Error' });
