@@ -136,10 +136,53 @@ export const UpdateProject = async (request, response) => {
 }
 
 export const AddMemberToProject = async (request, response) => {
+
     try {
-        
+
+        const { userId } = await request.auth();
+        const { projectId } = request.params;
+        const { email } = request.body;
+
+        // check if user is the project lead
+        const project = await prisma.project.findUnique({
+            where: { id: projectId },
+            include: { workspace: { include: { members: true } } }
+        });
+
+        if(!project) { 
+            return response.status(404).send({ message: 'Project not found' });
+        } else if(project.team_lead !== userId) {
+            return response.status(403).send( { message: 'Forbidden: You do not have permission to add members to this project' });
+        }
+
+        // check if the user is already a member of the project
+        const existingProjectMember = project.members.find((member) => member.user.email === email);
+
+        if(existingProjectMember) {
+            return response.status(409).send({ message: 'User is already a member of the project' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: {
+                email
+            }
+        });
+
+        if(!user) {
+            return response.status(404).send({ message: 'User not found' });
+        }
+
+        const member = await prisma.projectMember.create({
+            data: {
+                userId: user.id,
+                projectId
+            }
+        });
+
+        return response.status(201).json({ member, message: 'Member added to project successfully' });
+
     } catch(error) {
-        console.log(error || "Error to add member to a project")
+        console.log(error || "Error to add member to project")
         return response.status(500).send({ message: 'Internal Server Error' });
     }
 }
