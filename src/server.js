@@ -9,6 +9,7 @@ import workspaceRouter from './routes/WorkspaceRoutes.js';
 import { AuthMiddleware } from './middlewares/AuthMiddleware.js';
 import projectRouter from './routes/ProjectRouter.js';
 import taskRouter from './routes/TaskRoutes.js';
+import commentRouter from './routes/CommentRoutes.js';
 
 dotenv.config();
 
@@ -36,6 +37,9 @@ app.use('/api/projects', AuthMiddleware, projectRouter);
 
 // task routes
 app.use('/api/tasks', AuthMiddleware, taskRouter);
+
+// comment routes
+app.use('/api/comments', AuthMiddleware, commentRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
