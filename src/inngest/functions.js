@@ -1,5 +1,6 @@
 import {inngest} from './client.js';
 import prisma from '../lib/prisma.js';
+import SendEmail from '../lib/nodemailer.js';
 
 // user management functions
 const syncUserCreation = inngest.createFunction(
@@ -94,6 +95,8 @@ const syncWorkspaceUpdate = inngest.createFunction(
   },
 );
 
+
+
 const syncWorkspaceDeletion = inngest.createFunction(
   {id: 'sync-workspace-deletion-from-clerk'},
   {event: 'clerk/organization.deleted'},
@@ -122,6 +125,57 @@ const syncSaveMemberToWorkspace = inngest.createFunction(
   },
 );
 
+// function to send email on task creation
+const sendTaskAssignmentEmail = inngest.createFunction(
+    { id: 'send-task-assignment-email' },
+    { event: 'app/task.assigned' },
+
+    async ({ event, step }) => {
+        const { taskId, origin } = event.data;
+
+        const task = await prisma.task.findUnique({
+            where: { id: taskId },
+            include: { assignee: true, project: true },
+        });
+
+        await SendEmail({
+            to: task.assignee.email,
+            subject: `New Task Assignment in: ${task.project.name}`,
+            body: `<p>Hi ${task.assignee.name},</p>
+                   <p>You have been assigned a new task: <strong>${task.title}</strong></p>
+                   <p>Due date: ${new Date(task.due_date).toLocaleDateString()}</p>
+                   <p>Click <a href="${origin}">here</a> to view the task.</p>
+                   <p>Best,<br/>The Team</p>`,
+        });
+
+        if(new Date(task.due_date).toLocaleDateString() !== new Date().toDateString()) {
+            await step.sleepUntil('wait-for-the-due-date', new Date(task.due_date));
+
+            await step.run('check-if-task-is-completed', async () => {
+                const task = await prisma.task.findUnique({
+                    where: { id: taskId },
+                    include: {  assignee: true, project: true },
+                });
+
+                if(!task) return;
+
+                if(task.status !== 'DONE') {
+                    await step.run('send-task-reminder-email', async () => {
+                       await SendEmail({
+                           to: task.assignee.email,
+                           subject: `Reminder: Task "${task.title}" is Due Today`,
+                           body: `<p>Hi ${task.assignee.name},</p>
+                                   <p>This is a reminder that the task "${task.title}" is due today.</p>
+                                   <p>Best,<br/>The Team</p>`,
+                       });
+                    });
+                }
+            });
+        }
+    }
+
+)
+
 export const functions = [
   syncUserCreation,
   syncUserDeletion,
@@ -130,4 +184,5 @@ export const functions = [
   syncWorkspaceUpdate,
   syncWorkspaceDeletion,
   syncSaveMemberToWorkspace,
+  sendTaskAssignmentEmail,
 ];
