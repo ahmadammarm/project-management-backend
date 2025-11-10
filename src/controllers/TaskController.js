@@ -44,3 +44,78 @@ export const CreateTask = async (request, response) => {
         return response.status(500).send({ message: 'Internal Server Error' });
     }
 }
+
+export const UpdateTask = async (request, response) =>{
+    try {
+
+        const task = await prisma.task.findUnique({
+            where: { id: request.params.id }
+        });
+
+        if(!task) {
+            return response.status(404).send({ message: 'Task not found' });
+        }
+
+        const { userId } = await request.auth();
+
+        const project = await prisma.project.findUnique({
+            where: { id: task.projectId },
+            include: { members: { include: { user: true } } }
+        });
+
+        if(!project) {
+            return response.status(404).send({ message: 'Project not found' });
+        } else if(project.team_lead !== userId) {
+            return response.status(403).send( { message: 'Forbidden: You do not have permission to update tasks in this project' });
+        }
+
+        const updatedTask = await prisma.task.update({
+            where: { id: request.params.id },
+            data: request.body
+        });
+
+        return response.status(200).json({ task: updatedTask, message: 'Task updated successfully' });
+
+
+    } catch(error) {
+        console.log(error || "Error to update a task");
+        return response.status(500).send({ message: 'Internal Server Error' });
+    }
+}
+
+export const DeleteTask = async (request, response) => {
+    try {
+
+        const { userId } = await request.auth();
+        const { taskIds } = request.body;
+
+        const tasks = await prisma.task.findMany({
+            where: { id: { in: taskIds } }
+        });
+
+        if(tasks.length === 0) {
+            return response.status(404).send({ message: 'No tasks found to delete' });
+        }
+
+        const project = await prisma.project.findUnique({
+            where: { id: tasks[0].projectId },
+            include: { members: { include: { user: true } } }
+        });
+
+        if(!project) {
+            return response.status(404).send({ message: 'Project not found' });
+        } else if(project.team_lead !== userId) {
+            return response.status(403).send( { message: 'Forbidden: You do not have permission to delete tasks in this project' });
+        }
+
+        await prisma.task.deleteMany({
+            where: { id: { in: taskIds } }
+        });
+
+        return response.status(200).json({ message: 'Tasks deleted successfully' });
+
+    } catch(error) {
+        console.log(error || "Error to delete a task");
+        return response.status(500).send({ message: 'Internal Server Error' });
+    }
+}

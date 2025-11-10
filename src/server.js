@@ -8,6 +8,7 @@ import {functions} from './inngest/functions.js';
 import workspaceRouter from './routes/WorkspaceRoutes.js';
 import { AuthMiddleware } from './middlewares/AuthMiddleware.js';
 import projectRouter from './routes/ProjectRouter.js';
+import taskRouter from './routes/TaskRoutes.js';
 
 dotenv.config();
 
@@ -32,6 +33,9 @@ app.use('/api/workspaces', AuthMiddleware, workspaceRouter);
 
 //project routes
 app.use('/api/projects', AuthMiddleware, projectRouter);
+
+// task routes
+app.use('/api/tasks', AuthMiddleware, taskRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
