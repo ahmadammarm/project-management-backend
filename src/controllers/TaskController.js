@@ -1,3 +1,5 @@
+import { inngest } from "../inngest/client";
+
 export const CreateTask = async (request, response) => {
 
     try {
@@ -35,6 +37,14 @@ export const CreateTask = async (request, response) => {
             where: { id: task.id },
             include: { assignee: true }
         });
+
+        await inngest.send({
+            name: 'app/task.assigned',
+            data: {
+                taskId: task.id,
+                origin,
+            },
+        })
 
         return response.status(201).json({ task: taskWithAssignee, message: 'Task created successfully' });
 
