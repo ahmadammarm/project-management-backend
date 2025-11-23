@@ -23,8 +23,8 @@ app.use(cors());
 
 app.use(clerkMiddleware());
 
-app.get('/', (_, res) => {
-  res.send('Project Management Backend is running');
+app.get('/', (_, response) => {
+  response.json({ message: "Hi, welcome to project management backend" });
 });
 
 app.use('/api/inngest', serve({client: inngest, functions}));
