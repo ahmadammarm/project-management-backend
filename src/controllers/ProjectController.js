@@ -1,9 +1,9 @@
-import prisma from "../lib/prisma";
+import prisma from "../lib/prisma.js";
 
 export const CreateProject = async (request, response) => {
     try {
         const { userId } = await request.auth();
-        const { workspaceId, name, description, status, start_date, end_date, team_members, 
+        const { workspaceId, name, description, status, start_date, end_date, team_members,
             team_lead, progress, priority
         } = request.body;
 
@@ -58,17 +58,17 @@ export const CreateProject = async (request, response) => {
 
         const projectWithMembers = await prisma.project.findUnique({
             where: { id: newProject.id },
-            include: { 
-                members: { include: { user: true } }, 
-                tasks: { 
-                    include: { 
-                        assignee: true, 
-                        comments: { 
-                            include: { 
-                                user: true 
-                            } 
-                        } 
-                    } 
+            include: {
+                members: { include: { user: true } },
+                tasks: {
+                    include: {
+                        assignee: true,
+                        comments: {
+                            include: {
+                                user: true
+                            }
+                        }
+                    }
                 },
                 owner: true
             }
@@ -101,7 +101,7 @@ export const UpdateProject = async (request, response) => {
         }
 
         if(!workspace.members.some((member) => member.userId === userId && member.role === 'ADMIN')) {
-            
+
             const project = await prisma.project.findUnique({
                 where: { id }
             });
@@ -149,7 +149,7 @@ export const AddMemberToProject = async (request, response) => {
             include: { workspace: { include: { members: true } } }
         });
 
-        if(!project) { 
+        if(!project) {
             return response.status(404).send({ message: 'Project not found' });
         } else if(project.team_lead !== userId) {
             return response.status(403).send( { message: 'Forbidden: You do not have permission to add members to this project' });

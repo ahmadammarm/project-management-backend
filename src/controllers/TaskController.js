@@ -1,4 +1,4 @@
-import { inngest } from "../inngest/client";
+import { inngest } from "../inngest/client.js";
 
 export const CreateTask = async (request, response) => {
 
