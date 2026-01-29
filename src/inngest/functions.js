@@ -52,30 +52,39 @@ const syncUserUpdate = inngest.createFunction(
 
 // workspace management functions
 const syncWorkspaceCreation = inngest.createFunction(
-  {id: 'sync-workspace-from-clerk'},
-  {event: 'clerk/organization.created'},
-  async ({event}) => {
-    const {data} = event;
-    await prisma.workspace.create({
-      data: {
-        id: data.id,
-        name: data.name,
-        slug: data.slug,
-        ownerId: data.created_by,
-        image_url: data.image_url,
-      },
-    });
+  { id: 'sync-workspace-from-clerk' },
+  { event: 'clerk/organization.created' },
+  async ({ event }) => {
+    const { data } = event;
 
-    // add the creator as an admin member
-    await prisma.workspaceMember.create({
-      data: {
-        userId: data.created_by,
-        workspaceId: data.id,
-        role: 'ADMIN',
-      },
+    const ownerId = data.created_by ?? data.createdBy;
+    if (!ownerId) {
+      console.warn('Organization created without owner:', data.id);
+      return;
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.workspace.create({
+        data: {
+          id: data.id,
+          name: data.name,
+          slug: data.slug,
+          ownerId,
+          image_url: data.image_url,
+        },
+      });
+
+      await tx.workspaceMember.create({
+        data: {
+          userId: ownerId,
+          workspaceId: data.id,
+          role: 'ADMIN',
+        },
+      });
     });
   },
 );
+
 
 const syncWorkspaceUpdate = inngest.createFunction(
   {id: 'sync-workspace-update-from-clerk'},

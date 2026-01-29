@@ -1,3 +1,7 @@
 node_modules
 .env
-/generated/prisma
+/lib/generated/prisma
+
+/src/lib/generated/prisma
+
+/src/generated/prisma
