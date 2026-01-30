@@ -4,7 +4,7 @@ import { AddMemberToProject, CreateProject, UpdateProject } from '../controllers
 const projectRouter = Router();
 
 projectRouter.post('/', CreateProject);
-projectRouter.put('/:projectId', UpdateProject);
+projectRouter.put('/', UpdateProject);
 projectRouter.post('/:projectId/addMember', AddMemberToProject);
 
 export default projectRouter;
