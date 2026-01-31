@@ -62,10 +62,10 @@ export const CreateProject = async (req, res) => {
       data: {
         workspaceId,
         name,
-        description,
-        status,
-        priority,
-        progress,
+        description: description || '',
+        status: status || 'PLANNING',
+        priority: priority || 'MEDIUM',
+        progress: progress || 0,
         team_lead: teamLeadId,
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,
@@ -93,6 +93,14 @@ export const CreateProject = async (req, res) => {
       include: {
         members: {include: {user: true}},
         owner: true,
+        tasks: {
+          include: {
+            assignee: true,
+            comments: {
+              include: {user: true},
+            },
+          },
+        },
       },
     });
 
