@@ -1,5 +1,6 @@
 import SendEmail from "../lib/nodemailer.js";
 import dotenv from "dotenv";
+import prisma from "../lib/prisma.js";
 
 dotenv.config();
 
