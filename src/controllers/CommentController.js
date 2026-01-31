@@ -42,7 +42,7 @@ export const AddComment = async (request, response) => {
             }
         });
 
-        return response.status(201).json(comment);
+        return response.status(201).json({comment});
 
     } catch(error) {
         console.log(error || "Error to add a comment");
@@ -64,7 +64,7 @@ export const GetTaskComments = async (request, response) => {
             }
         });
 
-        return response.status(200).json(comments);
+        return response.status(200).json({comments});
 
     } catch(error) {
         console.log(error || "Error to get task comments");
